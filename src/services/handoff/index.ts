@@ -7,7 +7,7 @@
 
 export { HandoffService, DEFAULT_CONFIG } from './handoffService';
 export { StateManager } from './stateManager';
-export { installHooks, uninstallHooks, isInstalled } from './hookInstaller';
+export { installHooks, uninstallHooks, isInstalled, injectAgentsSnippet, removeAgentsSnippet, copyHandoffSkill } from './hookInstaller';
 export { readTranscript, extractMessages, extractContent, extractFilePaths } from './transcriptReader';
 export { assessContextHealth, estimateTokensFromChars, calculateUsagePercent } from './tokenEstimator';
 export { summarizeTranscript } from './contextSummarizer';

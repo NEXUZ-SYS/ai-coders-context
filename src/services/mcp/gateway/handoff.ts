@@ -9,7 +9,7 @@ import { HandoffService } from '../../handoff';
 import type { MCPToolResponse } from './response';
 import { createJsonResponse, createErrorResponse } from './response';
 
-export type HandoffAction = 'install' | 'uninstall' | 'status' | 'config' | 'clean' | 'trigger';
+export type HandoffAction = 'install' | 'uninstall' | 'status' | 'config' | 'clean' | 'trigger' | 'setup';
 
 export interface HandoffParams {
   action: HandoffAction;
@@ -130,6 +130,21 @@ export async function handleHandoff(
           message: 'Handoff triggered manually',
           reason: params.reason || 'Manual trigger via MCP',
           instruction: 'A new session should be started to restore the saved context.',
+        });
+      }
+
+      case 'setup': {
+        const result = await service.setup();
+
+        return createJsonResponse({
+          success: true,
+          message: 'Handoff documentation setup complete',
+          ...result,
+          nextSteps: [
+            'AGENTS.md updated with handoff snippet.',
+            'Handoff skill copied to .context/skills/handoff/.',
+            'Use handoff({ action: "install" }) to also install hooks.',
+          ],
         });
       }
 

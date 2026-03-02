@@ -89,9 +89,6 @@ export function installHooks(
   // 5. Merge hooks into settings
   mergeHooksIntoSettings(settingsPath);
 
-  // 6. Inject handoff snippet into AGENTS.md
-  injectAgentsSnippet(repoPath);
-
   return { success: true, target, hooksDirPath, settingsPath, configPath };
 }
 
@@ -150,7 +147,7 @@ export function isInstalled(repoPath: string): boolean {
   }
 }
 
-// --- Internal ---
+// --- Exported helpers ---
 
 function copyHookScripts(repoPath: string): string {
   const targetDir = path.join(repoPath, '.claude', 'extensions', 'auto-handoff', 'src');
@@ -256,7 +253,7 @@ function generateHookScripts(_targetDir: string): void {
   // For now, the hooks are always distributed with the package.
 }
 
-function injectAgentsSnippet(repoPath: string): void {
+export function injectAgentsSnippet(repoPath: string): void {
   const agentsPath = path.join(repoPath, 'AGENTS.md');
 
   if (fs.existsSync(agentsPath)) {
@@ -280,7 +277,7 @@ function injectAgentsSnippet(repoPath: string): void {
   }
 }
 
-function removeAgentsSnippet(repoPath: string): void {
+export function removeAgentsSnippet(repoPath: string): void {
   const agentsPath = path.join(repoPath, 'AGENTS.md');
   if (!fs.existsSync(agentsPath)) return;
 
@@ -300,6 +297,33 @@ function removeAgentsSnippet(repoPath: string): void {
     fs.writeFileSync(agentsPath, cleaned + '\n');
   }
 }
+
+/**
+ * Copy the handoff SKILL.md to the target project's .context/skills/handoff/.
+ * Returns true if the file was copied, false if the source was not found.
+ */
+export function copyHandoffSkill(repoPath: string): boolean {
+  const targetDir = path.join(repoPath, '.context', 'skills', 'handoff');
+  const targetPath = path.join(targetDir, 'SKILL.md');
+
+  // Resolve source SKILL.md from the package
+  const candidates = [
+    path.join(__dirname, '..', '..', '..', '.context', 'skills', 'handoff', 'SKILL.md'), // dev
+    path.join(__dirname, '..', '..', '.context', 'skills', 'handoff', 'SKILL.md'),        // compiled
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+      fs.copyFileSync(candidate, targetPath);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// --- Internal ---
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

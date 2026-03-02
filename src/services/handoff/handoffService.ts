@@ -19,7 +19,7 @@ import { readTranscript } from './transcriptReader';
 import { assessContextHealth } from './tokenEstimator';
 import { summarizeTranscript } from './contextSummarizer';
 import { generateHandoffPrompt } from './handoffGenerator';
-import { installHooks, uninstallHooks, isInstalled } from './hookInstaller';
+import { installHooks, uninstallHooks, isInstalled, injectAgentsSnippet, copyHandoffSkill } from './hookInstaller';
 
 export const DEFAULT_CONFIG: HandoffConfig = {
   enabled: true,
@@ -54,6 +54,14 @@ export class HandoffService {
   constructor(repoPath: string) {
     this.repoPath = path.resolve(repoPath);
     this.stateManager = new StateManager(this.repoPath);
+  }
+
+  // --- Setup (lightweight: docs + skill only) ---
+
+  async setup(): Promise<{ agentsInjected: boolean; skillCopied: boolean }> {
+    injectAgentsSnippet(this.repoPath);
+    const skillCopied = copyHandoffSkill(this.repoPath);
+    return { agentsInjected: true, skillCopied };
   }
 
   // --- Install / Uninstall ---

@@ -532,6 +532,7 @@ Actions:
 - config: Read/update handoff configuration (params: contextLimit?, proactiveThreshold?, debug?)
 - clean: Clean up old session state
 - trigger: Manually trigger a handoff save (params: reason?)
+- setup: Lightweight setup — inject AGENTS.md snippet + copy handoff skill (no hooks)
 
 **What it does:**
 - Monitors context usage and triggers handoff before compaction
@@ -539,7 +540,7 @@ Actions:
 - Restores context automatically in new sessions
 - Provides wrapper script for autonomous operation`,
       inputSchema: {
-        action: z.enum(['install', 'uninstall', 'status', 'config', 'clean', 'trigger'])
+        action: z.enum(['install', 'uninstall', 'status', 'config', 'clean', 'trigger', 'setup'])
           .describe('Action to perform'),
         repoPath: z.string().optional()
           .describe('Repository path'),

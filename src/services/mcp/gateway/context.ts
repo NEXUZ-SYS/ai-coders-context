@@ -21,6 +21,8 @@ import { SemanticContextBuilder, type ContextFormat } from '../../semantic/conte
 import { CodebaseAnalyzer } from '../../semantic/codebaseAnalyzer';
 import { QAService } from '../../qa';
 
+import { HandoffService } from '../../handoff';
+
 import type { ContextParams } from './types';
 import type { MCPToolResponse } from './response';
 import { createJsonResponse, createErrorResponse, createTextResponse, createScaffoldResponse } from './response';
@@ -64,6 +66,14 @@ export async function handleContext(
           },
           toolContext
         );
+
+        // Inject handoff documentation (AGENTS.md snippet + skill copy)
+        try {
+          const handoffService = new HandoffService(repoPath);
+          await handoffService.setup();
+        } catch {
+          // Non-critical: don't break init if handoff setup fails
+        }
 
         // Extract pending files from result for scaffold response
         const pendingWrites = (result as Record<string, unknown>).pendingWrites as Array<{ filePath: string }> | undefined;
