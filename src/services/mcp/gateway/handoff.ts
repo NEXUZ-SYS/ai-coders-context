@@ -79,12 +79,32 @@ export async function handleHandoff(
       case 'status': {
         const status = await service.getStatus();
         const diagnosis = diagnoseHandoff(repoPath);
+        const config = status.config;
+        const health = status.health;
+
+        // Calculate remaining context before auto-handoff kicks in
+        const proactiveLimit = Math.floor(config.contextLimit * config.proactiveThreshold / 100);
+        const usedTokens = health?.estimatedTokens ?? status.session?.estimatedTokens ?? 0;
+        const tokensBeforeHandoff = Math.max(0, proactiveLimit - usedTokens);
+        const percentBeforeHandoff = config.contextLimit > 0
+          ? Math.max(0, parseFloat((config.proactiveThreshold - (health?.usagePercent ?? status.session?.usagePercent ?? 0)).toFixed(1)))
+          : 0;
 
         return createJsonResponse({
           success: true,
           level: diagnosis.level,
           installed: status.installed,
           enabled: status.enabled,
+          contextRemaining: {
+            tokensUsed: usedTokens,
+            tokensBeforeHandoff,
+            percentBeforeHandoff,
+            contextLimit: config.contextLimit,
+            proactiveThreshold: `${config.proactiveThreshold}%`,
+            summary: usedTokens > 0
+              ? `${tokensBeforeHandoff.toLocaleString()} tokens (${percentBeforeHandoff}%) restantes antes do auto-handoff (threshold: ${config.proactiveThreshold}%)`
+              : `Auto-handoff ativa em ${proactiveLimit.toLocaleString()} tokens (${config.proactiveThreshold}% de ${config.contextLimit.toLocaleString()})`,
+          },
           session: status.session ? {
             sessionId: status.session.sessionId,
             estimatedTokens: status.session.estimatedTokens,
@@ -93,7 +113,12 @@ export async function handleHandoff(
             contextStatus: status.session.contextStatus,
             thresholdReached: status.session.thresholdReached,
           } : null,
-          health: status.health,
+          health: health ? {
+            status: health.status,
+            estimatedTokens: health.estimatedTokens,
+            usagePercent: health.usagePercent,
+            remainingTokens: health.remainingTokens,
+          } : null,
           handoffPending: status.handoffPending,
           sessionsArchived: status.sessionsArchived,
           ...(diagnosis.level !== 'full' && {
