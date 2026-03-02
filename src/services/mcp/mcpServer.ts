@@ -526,21 +526,28 @@ Actions:
     // Tool 10: handoff - Auto-handoff context preservation
     this.server.registerTool('handoff', {
       description: `Auto-handoff context preservation to prevent compaction loss. Actions:
-- install: Install auto-handoff hooks in project (params: target?)
+- install: Install/upgrade auto-handoff hooks in project (works even if project already has partial handoff)
 - uninstall: Remove auto-handoff hooks
-- status: Get current context health and session state
+- status: Get current context health, session state, and protection level
 - config: Read/update handoff configuration (params: contextLimit?, proactiveThreshold?, debug?)
 - clean: Clean up old session state
 - trigger: Manually trigger a handoff save (params: reason?)
 - setup: Lightweight setup — inject AGENTS.md snippet + copy handoff skill (no hooks)
+- diagnose: Check what handoff components are installed and what's missing
+
+**Protection levels:**
+- none: No handoff configured
+- skill-only: Manual handoff only (SKILL.md + AGENTS.md, no automatic protection)
+- partial: Some hooks present but incomplete installation
+- full: Complete auto-handoff with token counting + hooks (Stop@80%, PreCompact@95%, SessionStart restore)
 
 **What it does:**
 - Monitors context usage and triggers handoff before compaction
 - Saves transcript state as snapshots for recovery
 - Restores context automatically in new sessions
-- Provides wrapper script for autonomous operation`,
+- Upgrades existing manual handoff to full automatic protection`,
       inputSchema: {
-        action: z.enum(['install', 'uninstall', 'status', 'config', 'clean', 'trigger', 'setup'])
+        action: z.enum(['install', 'uninstall', 'status', 'config', 'clean', 'trigger', 'setup', 'diagnose'])
           .describe('Action to perform'),
         repoPath: z.string().optional()
           .describe('Repository path'),

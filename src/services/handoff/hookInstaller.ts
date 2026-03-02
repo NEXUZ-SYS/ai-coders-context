@@ -7,7 +7,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { InstallResult, HandoffConfig } from './types';
+import type { InstallResult, HandoffConfig, HandoffDiagnosis } from './types';
 import { DEFAULT_CONFIG } from './handoffService';
 
 const AGENTS_MARKER_START = '<!-- ai-context:handoff:start -->';
@@ -60,23 +60,108 @@ const HOOK_DEFINITIONS = {
 };
 
 /**
+ * Diagnose existing handoff state in a project.
+ * Returns what's installed, what's missing, and the protection level.
+ */
+export function diagnoseHandoff(repoPath: string): HandoffDiagnosis {
+  const skillPath = path.join(repoPath, '.context', 'skills', 'handoff', 'SKILL.md');
+  const agentsPath = path.join(repoPath, 'AGENTS.md');
+  const extensionDir = path.join(repoPath, '.claude', 'extensions', 'auto-handoff');
+  const settingsPath = path.join(repoPath, '.claude', 'settings.json');
+  const configPath = path.join(extensionDir, 'config.json');
+  const stateDir = path.join(extensionDir, 'state');
+
+  const hasSkill = fs.existsSync(skillPath);
+  let hasAgentsSnippet = false;
+  let hasAgentsMarkers = false;
+  if (fs.existsSync(agentsPath)) {
+    const content = fs.readFileSync(agentsPath, 'utf-8');
+    hasAgentsMarkers = content.includes(AGENTS_MARKER_START);
+    hasAgentsSnippet = hasAgentsMarkers || /handoff/i.test(content);
+  }
+
+  const hasHookScripts = fs.existsSync(path.join(extensionDir, 'src', 'monitor.mjs'));
+  let hasHooksInSettings = false;
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      const hooks = settings.hooks || {};
+      hasHooksInSettings = !!(
+        hooks.PreCompact?.some?.((h: any) => h.hooks?.some?.((hk: any) => hk.command?.includes('auto-handoff'))) ||
+        hooks.SessionStart?.some?.((h: any) => h.hooks?.some?.((hk: any) => hk.command?.includes('auto-handoff')))
+      );
+    } catch { /* ignore */ }
+  }
+
+  const hasConfig = fs.existsSync(configPath);
+  const hasStateDir = fs.existsSync(stateDir);
+
+  // Check if skill needs update (legacy version without auto-handoff section)
+  let skillNeedsUpdate = false;
+  if (hasSkill) {
+    try {
+      const skillContent = fs.readFileSync(skillPath, 'utf-8');
+      skillNeedsUpdate = !skillContent.includes('Auto-Handoff') && !skillContent.includes('auto-handoff');
+    } catch { /* ignore */ }
+  }
+
+  // Determine level
+  const missing: string[] = [];
+  let level: HandoffDiagnosis['level'] = 'none';
+
+  if (!hasSkill) missing.push('skill (.context/skills/handoff/SKILL.md)');
+  if (!hasAgentsMarkers) missing.push('AGENTS.md snippet (com markers)');
+  if (!hasHookScripts) missing.push('hook scripts (.claude/extensions/auto-handoff/src/)');
+  if (!hasHooksInSettings) missing.push('hooks em settings.json');
+  if (!hasConfig) missing.push('config (.claude/extensions/auto-handoff/config.json)');
+  if (!hasStateDir) missing.push('state dir (.claude/extensions/auto-handoff/state/)');
+  if (skillNeedsUpdate) missing.push('skill atualizado (versao com auto-handoff)');
+
+  if (hasHookScripts && hasHooksInSettings && hasConfig) {
+    level = 'full';
+  } else if (hasSkill || hasAgentsSnippet) {
+    level = hasHookScripts || hasHooksInSettings ? 'partial' : 'skill-only';
+  }
+
+  return {
+    hasSkill,
+    hasAgentsSnippet,
+    hasAgentsMarkers,
+    hasHookScripts,
+    hasHooksInSettings,
+    hasConfig,
+    hasStateDir,
+    skillNeedsUpdate,
+    level,
+    missing,
+  };
+}
+
+/**
  * Install auto-handoff hooks.
+ * Works as an upgrade when partial handoff already exists.
  */
 export function installHooks(
   repoPath: string,
   target: 'project' | 'user' = 'project'
 ): InstallResult {
+  const diagnosis = diagnoseHandoff(repoPath);
+  const actions: string[] = [];
+  const upgraded = diagnosis.level !== 'none';
+
   const settingsPath = target === 'project'
     ? path.join(repoPath, '.claude', 'settings.json')
     : path.join(process.env.HOME || '~', '.claude', 'settings.json');
 
-  // 1. Copy hook scripts
+  // 1. Copy hook scripts (always update to latest)
   const hooksDirPath = copyHookScripts(repoPath);
+  actions.push(diagnosis.hasHookScripts ? 'hooks atualizados' : 'hooks instalados');
 
-  // 2. Write default config
+  // 2. Write default config (only if missing)
   const configPath = path.join(repoPath, '.claude', 'extensions', 'auto-handoff', 'config.json');
   if (!fs.existsSync(configPath)) {
     fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2));
+    actions.push('config criado');
   }
 
   // 3. Copy wrapper script
@@ -84,12 +169,32 @@ export function installHooks(
 
   // 4. Ensure state directories
   const stateDir = path.join(repoPath, '.claude', 'extensions', 'auto-handoff', 'state');
-  fs.mkdirSync(path.join(stateDir, 'sessions'), { recursive: true });
+  if (!fs.existsSync(path.join(stateDir, 'sessions'))) {
+    fs.mkdirSync(path.join(stateDir, 'sessions'), { recursive: true });
+    actions.push('state dir criado');
+  }
 
   // 5. Merge hooks into settings
   mergeHooksIntoSettings(settingsPath);
+  if (!diagnosis.hasHooksInSettings) {
+    actions.push('hooks registrados em settings.json');
+  }
 
-  return { success: true, target, hooksDirPath, settingsPath, configPath };
+  // 6. Inject/update AGENTS.md snippet
+  injectAgentsSnippet(repoPath);
+  if (!diagnosis.hasAgentsMarkers) {
+    actions.push(diagnosis.hasAgentsSnippet ? 'AGENTS.md atualizado (markers adicionados)' : 'AGENTS.md snippet injetado');
+  }
+
+  // 7. Copy/update SKILL.md
+  if (!diagnosis.hasSkill || diagnosis.skillNeedsUpdate) {
+    const copied = copyHandoffSkill(repoPath);
+    if (copied) {
+      actions.push(diagnosis.hasSkill ? 'SKILL.md atualizado' : 'SKILL.md instalado');
+    }
+  }
+
+  return { success: true, target, hooksDirPath, settingsPath, configPath, upgraded, actions };
 }
 
 /**
@@ -256,24 +361,48 @@ function generateHookScripts(_targetDir: string): void {
 export function injectAgentsSnippet(repoPath: string): void {
   const agentsPath = path.join(repoPath, 'AGENTS.md');
 
-  if (fs.existsSync(agentsPath)) {
-    const content = fs.readFileSync(agentsPath, 'utf-8');
+  // Handle symlinks (e.g. AGENTS.md -> CLAUDE.md)
+  let resolvedPath = agentsPath;
+  try {
+    const stats = fs.lstatSync(agentsPath);
+    if (stats.isSymbolicLink()) {
+      resolvedPath = fs.realpathSync(agentsPath);
+    }
+  } catch { /* file doesn't exist yet */ }
 
-    // Already injected — update in place
+  if (fs.existsSync(resolvedPath)) {
+    const content = fs.readFileSync(resolvedPath, 'utf-8');
+
+    // Already injected with markers — update in place
     if (content.includes(AGENTS_MARKER_START)) {
       const updated = content.replace(
         new RegExp(`${escapeRegex(AGENTS_MARKER_START)}[\\s\\S]*?${escapeRegex(AGENTS_MARKER_END)}`),
         AGENTS_SNIPPET
       );
-      fs.writeFileSync(agentsPath, updated);
+      fs.writeFileSync(resolvedPath, updated);
       return;
     }
 
-    // Append to existing file
-    fs.writeFileSync(agentsPath, content.trimEnd() + '\n\n' + AGENTS_SNIPPET + '\n');
+    // Legacy handoff sections (without markers) — replace first, remove extras
+    // Matches: ## [emoji?] Handoff ... until next ## heading or --- separator
+    const legacyPattern = /\n*(## [^\n]*[Hh]andoff[^\n]*\n[\s\S]*?)(?=\n## |\n---\n|$)/g;
+    const matches = [...content.matchAll(legacyPattern)];
+    if (matches.length > 0) {
+      // Replace first legacy section with the marker-based snippet
+      let updated = content.replace(matches[0][0], '\n\n' + AGENTS_SNIPPET);
+      // Remove any additional legacy handoff sections (now redundant)
+      for (let i = 1; i < matches.length; i++) {
+        updated = updated.replace(matches[i][0], '\n');
+      }
+      fs.writeFileSync(resolvedPath, updated);
+      return;
+    }
+
+    // No handoff section found — append
+    fs.writeFileSync(resolvedPath, content.trimEnd() + '\n\n' + AGENTS_SNIPPET + '\n');
   } else {
     // Create minimal AGENTS.md with snippet
-    fs.writeFileSync(agentsPath, AGENTS_SNIPPET + '\n');
+    fs.writeFileSync(resolvedPath, AGENTS_SNIPPET + '\n');
   }
 }
 

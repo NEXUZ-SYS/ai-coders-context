@@ -159,6 +159,23 @@ export interface InstallResult {
   hooksDirPath: string;
   settingsPath: string;
   configPath: string;
+  upgraded?: boolean;
+  actions?: string[];
+}
+
+export type HandoffLevel = 'none' | 'skill-only' | 'partial' | 'full';
+
+export interface HandoffDiagnosis {
+  hasSkill: boolean;
+  hasAgentsSnippet: boolean;
+  hasAgentsMarkers: boolean;
+  hasHookScripts: boolean;
+  hasHooksInSettings: boolean;
+  hasConfig: boolean;
+  hasStateDir: boolean;
+  skillNeedsUpdate: boolean;
+  level: HandoffLevel;
+  missing: string[];
 }
 
 export interface CleanResult {

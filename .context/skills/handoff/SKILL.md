@@ -28,9 +28,10 @@ O sistema de handoff tambem esta disponivel via MCP:
 
 | Acao | Descricao |
 |------|-----------|
+| `handoff({ action: "diagnose" })` | Diagnosticar nivel de protecao (none/skill-only/partial/full) |
 | `handoff({ action: "status" })` | Ver status do contexto e saude da sessao |
+| `handoff({ action: "install" })` | Instalar/upgrade para auto-handoff completo (funciona mesmo com handoff parcial) |
 | `handoff({ action: "trigger", reason: "..." })` | Disparar handoff manualmente |
-| `handoff({ action: "install" })` | Instalar hooks de auto-handoff (protecao completa) |
 | `handoff({ action: "setup" })` | Setup leve — injeta AGENTS.md + copia skill (sem hooks) |
 | `handoff({ action: "config" })` | Ver/ajustar configuracao |
 | `handoff({ action: "clean" })` | Limpar estado de handoff |
@@ -136,17 +137,30 @@ Ao iniciar uma nova sessao:
    - **Ignorar**: Prosseguir normalmente, manter arquivo
    - **Limpar**: Remover handoff.yaml
 
-## Auto-Handoff (Protecao Automatica)
+## Niveis de Protecao
+
+| Nivel | Descricao | Componentes |
+|-------|-----------|-------------|
+| `none` | Nenhum handoff | Nada instalado |
+| `skill-only` | Manual (skill + AGENTS.md) | Handoff por comando, sem contagem de tokens |
+| `partial` | Incompleto | Alguns hooks presentes, instalacao incompleta |
+| `full` | Automatico completo | Hooks + contagem de tokens + 3 camadas de protecao |
+
+Use `handoff({ action: "diagnose" })` para verificar o nivel atual.
+Use `handoff({ action: "install" })` para fazer upgrade de qualquer nivel para `full`.
+
+## Auto-Handoff (Protecao Automatica — nivel `full`)
 
 O sistema de auto-handoff oferece 3 camadas de protecao contra perda de contexto:
 
 | Camada | Hook | Descricao |
 |--------|------|-----------|
 | **Proativa** | Stop (80%) | Bloqueia sessao e dispara handoff antes da compactacao |
-| **Reativa** | PreCompact | Salva snapshot do transcript antes da compactacao |
+| **Reativa** | PreCompact (95%) | Salva snapshot do transcript antes da compactacao |
 | **Restauracao** | SessionStart | Injeta contexto salvo ao iniciar/retomar sessao |
+| **Monitor** | PostToolUse | Monitora tokens a cada chamada de ferramenta |
 
-Instalar com: `handoff({ action: "install" })`
+Instalar/upgrade com: `handoff({ action: "install" })`
 
 ## Integracao com Workflow PREVC
 

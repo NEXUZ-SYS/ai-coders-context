@@ -6,12 +6,13 @@
  */
 
 import { HandoffService } from '../../handoff';
+import { diagnoseHandoff } from '../../handoff/hookInstaller';
 import { setupHandoffTool } from '../../ai/tools';
 import type { MCPToolResponse } from './response';
 import { createJsonResponse, createErrorResponse } from './response';
 import { toolContext } from './shared';
 
-export type HandoffAction = 'install' | 'uninstall' | 'status' | 'config' | 'clean' | 'trigger' | 'setup';
+export type HandoffAction = 'install' | 'uninstall' | 'status' | 'config' | 'clean' | 'trigger' | 'setup' | 'diagnose';
 
 export interface HandoffParams {
   action: HandoffAction;
@@ -42,13 +43,23 @@ export async function handleHandoff(
     switch (params.action) {
       case 'install': {
         const target = params.target || 'project';
+        const preDiagnosis = diagnoseHandoff(repoPath);
         const result = await service.install(target);
+
+        const isUpgrade = result.upgraded;
+        const levelBefore = preDiagnosis.level;
+        const message = isUpgrade
+          ? `Auto-handoff upgraded from '${levelBefore}' to 'full' (${target})`
+          : `Auto-handoff hooks installed (${target})`;
 
         return createJsonResponse({
           ...result,
-          message: `Auto-handoff hooks installed (${target})`,
+          previousLevel: levelBefore,
+          currentLevel: 'full',
+          message,
           nextSteps: [
-            'Hooks are now active. Context will be preserved automatically.',
+            'Hooks are now active. Context will be preserved automatically by token counting.',
+            'Protection: Stop(80%) + PreCompact(95%) + SessionStart(restore)',
             'Use handoff({ action: "status" }) to check context health.',
             'Use handoff({ action: "config" }) to adjust thresholds.',
           ],
@@ -67,9 +78,11 @@ export async function handleHandoff(
 
       case 'status': {
         const status = await service.getStatus();
+        const diagnosis = diagnoseHandoff(repoPath);
 
         return createJsonResponse({
           success: true,
+          level: diagnosis.level,
           installed: status.installed,
           enabled: status.enabled,
           session: status.session ? {
@@ -83,8 +96,11 @@ export async function handleHandoff(
           health: status.health,
           handoffPending: status.handoffPending,
           sessionsArchived: status.sessionsArchived,
-          ...(!status.installed && {
-            suggestion: 'Use handoff({ action: "install" }) to enable auto-handoff.',
+          ...(diagnosis.level !== 'full' && {
+            suggestion: diagnosis.level === 'none'
+              ? 'Use handoff({ action: "install" }) to enable auto-handoff.'
+              : `Current level: '${diagnosis.level}'. Use handoff({ action: "install" }) to upgrade to full auto-handoff with token counting.`,
+            missing: diagnosis.missing,
           }),
         });
       }
@@ -146,8 +162,39 @@ export async function handleHandoff(
           nextSteps: [
             'AGENTS.md updated with handoff snippet.',
             'Handoff skill copied to .context/skills/handoff/.',
-            'Use handoff({ action: "install" }) to also install hooks.',
+            'For full auto-handoff protection (token counting + hooks), use handoff({ action: "install" }).',
           ],
+        });
+      }
+
+      case 'diagnose': {
+        const diagnosis = diagnoseHandoff(repoPath);
+
+        const levelDescriptions: Record<string, string> = {
+          'none': 'Nenhum handoff configurado',
+          'skill-only': 'Apenas skill/docs (handoff manual, sem protecao automatica)',
+          'partial': 'Parcial (alguns hooks presentes, instalacao incompleta)',
+          'full': 'Completo (hooks + contagem de tokens + protecao automatica)',
+        };
+
+        return createJsonResponse({
+          success: true,
+          level: diagnosis.level,
+          levelDescription: levelDescriptions[diagnosis.level],
+          components: {
+            skill: diagnosis.hasSkill,
+            skillNeedsUpdate: diagnosis.skillNeedsUpdate,
+            agentsSnippet: diagnosis.hasAgentsSnippet,
+            agentsMarkers: diagnosis.hasAgentsMarkers,
+            hookScripts: diagnosis.hasHookScripts,
+            hooksInSettings: diagnosis.hasHooksInSettings,
+            config: diagnosis.hasConfig,
+            stateDir: diagnosis.hasStateDir,
+          },
+          missing: diagnosis.missing,
+          ...(diagnosis.level !== 'full' && {
+            recommendation: 'Use handoff({ action: "install" }) to upgrade to full auto-handoff protection.',
+          }),
         });
       }
 
