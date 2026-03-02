@@ -4,49 +4,70 @@ name: Test Writer
 description: Write comprehensive unit and integration tests
 agentType: test-writer
 phases: [E, V]
-generated: 2026-01-16
+generated: 2026-03-02
 status: filled
 scaffoldVersion: "2.0.0"
 ---
 
-# Test Writer Agent
+## Mission
 
-## Role
-
-This agent specializes in test writing tasks for this codebase.
-
-## Codebase Context
-
-- **Config**: 4 symbols
-- **Utils**: 66 symbols (depends on: Services, Controllers)
-- **Services**: 382 symbols (depends on: Config, Generators, Utils)
-- **Generators**: 75 symbols (depends on: Config, Utils, Services, Controllers)
-- **Repositories**: 3 symbols (depends on: Controllers)
-- **Controllers**: 1 symbols
-
-## Testing Framework
-
-- **Vitest** - Test runner
-- Test files: `*.test.ts` colocated with source
-
-## Testing Patterns
-
-- Unit tests for individual functions
-- Integration tests for services
-- Mock AI providers for testing
+The Test Writer agent creates comprehensive tests and maintains test coverage for the ai-coders-context codebase. Engage this agent when new features need tests, coverage gaps are identified, or test infrastructure needs improvement.
 
 ## Responsibilities
 
-1. Write unit tests for new features
-2. Add integration tests for services
-3. Maintain test coverage
-4. Mock external dependencies
+- Write unit tests for services, generators, and utilities
+- Create integration tests for cross-service workflows
+- Maintain test fixtures and mock configurations
+- Identify and fill coverage gaps
+- Keep test infrastructure and utilities up to date
 
-## Relevant Files
+## Best Practices
 
-- `src/**/*.test.ts` - Existing tests
-- `src/services/` - Services to test
-- `src/generators/` - Generators to test
+- Colocate unit tests with source files using `*.test.ts` naming
+- Use `*.integration.test.ts` for cross-service integration tests
+- Mock external dependencies (file system, AI providers) in unit tests
+- Follow Arrange-Act-Assert pattern for test structure
+- Test error paths and edge cases, not just happy paths
+- Use the `*Dependencies` interfaces to inject test doubles
 
----
-*Generated from codebase analysis.*
+## Key Project Resources
+
+- [Documentation Index](../docs/README.md)
+- [Agent Handbook](./README.md)
+- [AGENTS.md](../../AGENTS.md)
+- [Testing Strategy](../docs/testing-strategy.md)
+
+## Repository Starting Points
+
+- `src/services/shared/__tests__/` — Shared test utilities
+- `src/services/` — Service tests colocated with source
+- `src/generators/` — Generator tests
+- `jest.config.js` — Jest configuration
+
+## Key Files
+
+- `jest.config.js` — Jest configuration
+- `src/runInit.integration.test.ts` — Integration test example
+- `src/services/shared/__tests__/` — Shared test utilities
+- `src/services/shared/types.ts` — Dependency interfaces for mocking
+
+## Key Symbols for This Agent
+
+- `BaseDependencies` interface @ `src/services/shared/types.ts:14`
+- `AIDependencies` interface @ `src/services/shared/types.ts:23`
+- `createFixtureRepo` function @ `src/runInit.integration.test.ts:7`
+- `StateDetector` class @ `src/services/state/stateDetector.ts:40`
+
+## Documentation Touchpoints
+
+- [Testing Strategy](../docs/testing-strategy.md)
+- [Development Workflow](../docs/development-workflow.md)
+
+## Collaboration Checklist
+
+1. Identify the code or feature that needs tests
+2. Determine the appropriate test type (unit vs integration)
+3. Write tests following project conventions
+4. Run `npm test` to verify all tests pass
+5. Check coverage for the target area
+6. Update testing documentation if new patterns are introduced

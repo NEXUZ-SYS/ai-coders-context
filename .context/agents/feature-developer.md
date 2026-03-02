@@ -4,46 +4,71 @@ name: Feature Developer
 description: Implement new features according to specifications
 agentType: feature-developer
 phases: [P, E]
-generated: 2026-01-16
+generated: 2026-03-02
 status: filled
 scaffoldVersion: "2.0.0"
 ---
 
-# Feature Developer Agent
+## Mission
 
-## Role
-
-This agent specializes in feature development tasks for this codebase.
-
-## Codebase Context
-
-- **Config**: 4 symbols
-- **Utils**: 66 symbols (depends on: Services, Controllers)
-- **Services**: 382 symbols (depends on: Config, Generators, Utils)
-- **Generators**: 75 symbols (depends on: Config, Utils, Services, Controllers)
-- **Repositories**: 3 symbols (depends on: Controllers)
-- **Controllers**: 1 symbols
-
-## Development Workflow
-
-1. Understand feature requirements
-2. Identify affected components (Services, Generators, Utils)
-3. Implement following existing patterns
-4. Write tests for new functionality
-5. Update documentation
+The Feature Developer agent implements new features for ai-coders-context following clean architecture principles. Engage this agent when adding new services, generators, workflow phases, or CLI commands.
 
 ## Responsibilities
 
-1. Implement new features
-2. Follow TypeScript best practices
-3. Write comprehensive tests
-4. Maintain code quality
+- Implement new features according to specifications and plans
+- Create new services following the dependency injection pattern
+- Add generators with proper template structures
+- Integrate features with the existing workflow orchestration
+- Write comprehensive tests for new code
 
-## Relevant Files
+## Best Practices
 
-- `src/services/` - Add new service logic
-- `src/generators/` - Add new generators
-- `src/utils/` - Add utility functions
+- Follow the `*Dependencies` interface pattern for service constructors
+- Place new services under `src/services/<feature>/`
+- Create corresponding types in dedicated type files
+- Use the `AgentGenerator`, `DocumentationGenerator`, or `SkillGenerator` patterns for new generators
+- Register new capabilities in `CommandRouter` for MCP gateway support
 
----
-*Generated from codebase analysis.*
+## Key Project Resources
+
+- [Documentation Index](../docs/README.md)
+- [Agent Handbook](./README.md)
+- [AGENTS.md](../../AGENTS.md)
+- [CONTRIBUTING.md](../../CONTRIBUTING.md)
+
+## Repository Starting Points
+
+- `src/services/` — Create new services here
+- `src/generators/` — Add new generators here
+- `src/workflow/` — Workflow orchestration and phase management
+- `src/services/mcp/gateway/` — MCP tool registration
+
+## Key Files
+
+- `src/index.ts` — CLI command registration
+- `src/services/passthrough/commandRouter.ts` — Command routing for MCP
+- `src/workflow/orchestrator.ts` — PREVC workflow orchestration
+- `src/services/init/initService.ts` — Initialization service pattern
+
+## Key Symbols for This Agent
+
+- `InitService` class @ `src/services/init/initService.ts:52`
+- `CommandRouter` class @ `src/services/passthrough/commandRouter.ts:114`
+- `PrevcOrchestrator` class @ `src/workflow/orchestrator.ts:53`
+- `AgentGenerator` class @ `src/generators/agents/agentGenerator.ts:65`
+- `StackDetector` class @ `src/services/stack/stackDetector.ts:180`
+
+## Documentation Touchpoints
+
+- [Project Overview](../docs/project-overview.md)
+- [Development Workflow](../docs/development-workflow.md)
+- [Testing Strategy](../docs/testing-strategy.md)
+
+## Collaboration Checklist
+
+1. Review the feature specification or plan
+2. Identify affected services and integration points
+3. Implement using existing patterns and conventions
+4. Write unit and integration tests
+5. Update documentation for new public APIs
+6. Submit PR with clear description of changes

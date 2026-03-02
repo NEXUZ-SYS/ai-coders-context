@@ -36,12 +36,14 @@ import {
   handleWorkflowStatus,
   handleWorkflowAdvance,
   handleWorkflowManage,
+  handleHandoff,
   type ExploreParams,
   type ContextParams,
   type SyncParams,
   type PlanParams,
   type AgentParams,
   type SkillParams,
+  type HandoffParams,
   type WorkflowInitParams,
   type WorkflowStatusParams,
   type WorkflowAdvanceParams,
@@ -521,7 +523,44 @@ Actions:
       return handleSkill(params as SkillParams, { repoPath: this.getRepoPath() });
     }));
 
-    this.log('Registered 9 tools (5 consolidated gateways + 4 dedicated workflow tools)');
+    // Tool 10: handoff - Auto-handoff context preservation
+    this.server.registerTool('handoff', {
+      description: `Auto-handoff context preservation to prevent compaction loss. Actions:
+- install: Install auto-handoff hooks in project (params: target?)
+- uninstall: Remove auto-handoff hooks
+- status: Get current context health and session state
+- config: Read/update handoff configuration (params: contextLimit?, proactiveThreshold?, debug?)
+- clean: Clean up old session state
+- trigger: Manually trigger a handoff save (params: reason?)
+
+**What it does:**
+- Monitors context usage and triggers handoff before compaction
+- Saves transcript state as snapshots for recovery
+- Restores context automatically in new sessions
+- Provides wrapper script for autonomous operation`,
+      inputSchema: {
+        action: z.enum(['install', 'uninstall', 'status', 'config', 'clean', 'trigger'])
+          .describe('Action to perform'),
+        repoPath: z.string().optional()
+          .describe('Repository path'),
+        target: z.enum(['project', 'user']).optional()
+          .describe('(install, uninstall) Where to install hooks'),
+        contextLimit: z.number().optional()
+          .describe('(config) Context window token limit'),
+        proactiveThreshold: z.number().optional()
+          .describe('(config) Percentage threshold for proactive handoff'),
+        reactiveThreshold: z.number().optional()
+          .describe('(config) Percentage threshold for reactive recovery'),
+        debug: z.boolean().optional()
+          .describe('(config) Enable debug logging'),
+        reason: z.string().optional()
+          .describe('(trigger) Reason for manual handoff'),
+      }
+    }, wrap('handoff', async (params): Promise<MCPToolResponse> => {
+      return handleHandoff(params as HandoffParams, { repoPath: this.getRepoPath() });
+    }));
+
+    this.log('Registered 10 tools (6 consolidated gateways + 4 dedicated workflow tools)');
   }
 
   /**

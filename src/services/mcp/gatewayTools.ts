@@ -41,6 +41,10 @@ export {
   type AgentParams,
   type SkillParams,
 
+  // Action and parameter types for handoff
+  type HandoffAction,
+  type HandoffParams,
+
   // Consolidated gateway handlers
   handleExplore,
   handleContext,
@@ -48,6 +52,7 @@ export {
   handlePlan,
   handleAgent,
   handleSkill,
+  handleHandoff,
 
   // Dedicated workflow handlers
   handleWorkflowInit,
@@ -62,6 +67,7 @@ export {
   type PlanOptions,
   type AgentOptions,
   type SkillOptions,
+  type HandoffOptions,
 
   // Dedicated workflow handler types
   type WorkflowInitParams,

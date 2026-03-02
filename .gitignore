@@ -37,6 +37,9 @@ output/
 # AI Context state files
 context-log.json
 
+# Auto-handoff runtime (installed by handoff:install, user-specific)
+.claude/*
+
 # Temporary files
 *.tmp
 *.temp

@@ -33,6 +33,8 @@ export type {
   PlanParams,
   AgentParams,
   SkillParams,
+  HandoffAction,
+  HandoffParams,
 } from './types';
 
 // Consolidated gateway handlers
@@ -49,6 +51,7 @@ export { handleSync, type SyncOptions } from './sync';
 export { handlePlan, type PlanOptions } from './plan';
 export { handleAgent, type AgentOptions } from './agent';
 export { handleSkill, type SkillOptions } from './skill';
+export { handleHandoff, type HandoffOptions } from './handoff';
 
 // Metrics
 export {

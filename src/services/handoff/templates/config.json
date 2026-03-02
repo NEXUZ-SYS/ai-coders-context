@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "contextLimit": 200000,
+  "proactiveThreshold": 80,
+  "reactiveThreshold": 95,
+  "tokenEstimation": {
+    "charsPerToken": 3.5,
+    "includeToolResults": true,
+    "includeThinkingBlocks": false
+  },
+  "snapshot": {
+    "maxSummaryTokens": 4000,
+    "includeFileList": true,
+    "includeDecisions": true,
+    "includeProgress": true,
+    "maxFilesTracked": 50
+  },
+  "wrapper": {
+    "maxIterations": 20,
+    "delayBetweenSessions": 2,
+    "tool": "claude"
+  },
+  "maxSessionHistory": 10,
+  "debug": false
+}

@@ -19,6 +19,7 @@ export type SyncAction = 'exportRules' | 'exportDocs' | 'exportAgents' | 'export
 export type PlanAction = 'link' | 'getLinked' | 'getDetails' | 'getForPhase' | 'updatePhase' | 'recordDecision' | 'updateStep' | 'getStatus' | 'syncMarkdown' | 'commitPhase';
 export type AgentAction = 'discover' | 'getInfo' | 'orchestrate' | 'getSequence' | 'getDocs' | 'getPhaseDocs' | 'listTypes';
 export type SkillAction = 'list' | 'getContent' | 'getForPhase' | 'scaffold' | 'export' | 'fill';
+export type HandoffAction = 'install' | 'uninstall' | 'status' | 'config' | 'clean' | 'trigger';
 
 // Parameter interfaces for each gateway
 export interface ExploreParams {
@@ -129,4 +130,15 @@ export interface SkillParams {
   includeContent?: boolean;
   includeBuiltIn?: boolean;
   preset?: 'claude' | 'gemini' | 'codex' | 'antigravity' | 'all';
+}
+
+export interface HandoffParams {
+  action: HandoffAction;
+  repoPath?: string;
+  target?: 'project' | 'user';
+  contextLimit?: number;
+  proactiveThreshold?: number;
+  reactiveThreshold?: number;
+  debug?: boolean;
+  reason?: string;
 }

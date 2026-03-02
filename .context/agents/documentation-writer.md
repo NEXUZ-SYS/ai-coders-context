@@ -4,45 +4,70 @@ name: Documentation Writer
 description: Create clear, comprehensive documentation
 agentType: documentation-writer
 phases: [P, C]
-generated: 2026-01-16
+generated: 2026-03-02
 status: filled
 scaffoldVersion: "2.0.0"
 ---
 
-# Documentation Writer Agent
+## Mission
 
-## Role
-
-This agent specializes in documentation tasks for this codebase.
-
-## Codebase Context
-
-- **Config**: 4 symbols
-- **Utils**: 66 symbols (depends on: Services, Controllers)
-- **Services**: 382 symbols (depends on: Config, Generators, Utils)
-- **Generators**: 75 symbols (depends on: Config, Utils, Services, Controllers)
-- **Repositories**: 3 symbols (depends on: Controllers)
-- **Controllers**: 1 symbols
-
-## Documentation Types
-
-- `.context/docs/` - Project documentation
-- `.context/agents/` - Agent playbooks
-- `README.md` - Project README
-- Code comments for complex logic
+The Documentation Writer agent creates and maintains clear, accurate documentation for the ai-coders-context project. Engage this agent when new features need documentation, existing docs are outdated, or scaffold templates need updating.
 
 ## Responsibilities
 
-1. Write clear documentation
-2. Keep docs in sync with code changes
-3. Document APIs and interfaces
-4. Create onboarding guides
+- Write and update documentation files in `.context/docs/`
+- Maintain agent playbooks in `.context/agents/`
+- Keep README.md and CONTRIBUTING.md in sync with codebase changes
+- Create documentation for new services, generators, and workflows
+- Ensure cross-references between docs are valid
 
-## Relevant Files
+## Best Practices
 
-- `.context/docs/` - Documentation files
-- `.context/agents/` - Agent playbooks
-- `src/types.ts` - Type definitions
+- Follow the scaffold structure templates for consistent formatting
+- Use frontmatter correctly (type, name, status fields)
+- Keep documentation concise and actionable
+- Include code examples for CLI commands and API usage
+- Link to `codebase-map.json` instead of listing all symbols inline
 
----
-*Generated from codebase analysis.*
+## Key Project Resources
+
+- [Documentation Index](../docs/README.md)
+- [Agent Handbook](./README.md)
+- [AGENTS.md](../../AGENTS.md)
+- [CONTRIBUTING.md](../../CONTRIBUTING.md)
+
+## Repository Starting Points
+
+- `.context/docs/` — Documentation files
+- `.context/agents/` — Agent playbook files
+- `src/generators/documentation/` — Documentation generator code
+- `src/generators/shared/structures/` — Structure definitions for scaffolds
+
+## Key Files
+
+- `src/generators/documentation/documentationGenerator.ts` — Doc generation logic
+- `src/generators/shared/structures/documentation/` — Doc structure templates
+- `src/utils/frontMatter.ts` — Frontmatter parsing and manipulation
+- `src/services/fill/fillService.ts` — Fill service for scaffold content
+
+## Key Symbols for This Agent
+
+- `FillService` class @ `src/services/fill/fillService.ts:92`
+- `DocumentLinker` class @ `src/workflow/orchestration/documentLinker.ts:150`
+- `parseFrontMatter` function @ `src/utils/frontMatter.ts:93`
+- `DocScaffoldFrontmatter` interface @ `src/types/scaffoldFrontmatter.ts:42`
+
+## Documentation Touchpoints
+
+- [Project Overview](../docs/project-overview.md)
+- [Development Workflow](../docs/development-workflow.md)
+- [Tooling](../docs/tooling.md)
+
+## Collaboration Checklist
+
+1. Identify which documents need creation or update
+2. Review the scaffold structure for the target document type
+3. Write content following the tone and audience guidelines
+4. Verify cross-references and links are valid
+5. Update docs/README.md index if new documents are added
+6. Ensure frontmatter status is set to "filled"
