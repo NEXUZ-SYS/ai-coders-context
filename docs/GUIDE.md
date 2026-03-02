@@ -650,6 +650,18 @@ For developing/testing locally:
 | `workflowCollaborate` | Multi-agent collaboration |
 | `workflowCreateDoc` | Generate phase documents |
 
+#### Handoff Tools
+
+| Tool | Description |
+|------|-------------|
+| `handoff({ action: "install" })` | Install auto-handoff hooks (full protection) |
+| `handoff({ action: "setup" })` | Lightweight setup — AGENTS.md snippet + skill copy |
+| `handoff({ action: "status" })` | Check context health and session state |
+| `handoff({ action: "config" })` | Read/update thresholds and settings |
+| `handoff({ action: "trigger" })` | Manually trigger a handoff save |
+| `handoff({ action: "clean" })` | Clean up old session state |
+| `handoff({ action: "uninstall" })` | Remove auto-handoff hooks |
+
 #### Orchestration Tools
 
 | Tool | Description |
@@ -659,6 +671,55 @@ For developing/testing locally:
 | `getAgentDocs` | Get docs for an agent |
 | `getPhaseDocs` | Get docs for a phase |
 | `listAgentTypes` | List all agent types |
+
+---
+
+## Auto-Handoff (Context Preservation)
+
+Auto-handoff prevents context loss when Claude Code compacts your conversation. It saves session state and restores it automatically.
+
+### Installation
+
+**Full install (hooks + documentation):**
+```
+handoff({ action: "install" })
+```
+
+This installs 4 hooks in `.claude/settings.json`:
+
+| Hook | Trigger | Purpose |
+|------|---------|---------|
+| **Stop** | Context at 80% | Blocks session, triggers handoff |
+| **PreCompact** | Before compaction | Saves transcript snapshot |
+| **SessionStart** | Session start/resume | Restores saved context |
+| **PostToolUse** | Each tool call | Monitors context usage |
+
+**Lightweight setup (documentation only):**
+```
+handoff({ action: "setup" })
+```
+
+Injects AGENTS.md snippet and copies the handoff skill to `.context/skills/handoff/`. This runs automatically during `context({ action: "init" })`.
+
+### Configuration
+
+```
+handoff({ action: "config", contextLimit: 200000, proactiveThreshold: 80 })
+```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `contextLimit` | 200000 | Context window token limit |
+| `proactiveThreshold` | 80 | Percentage for proactive handoff |
+| `reactiveThreshold` | 95 | Percentage for reactive recovery |
+| `debug` | false | Enable debug logging |
+
+### Usage
+
+Once installed, handoff works automatically. The skill also detects intent:
+- **Pause intent**: "stop for today", "save progress", "continue tomorrow"
+- **Resume intent**: "continue where I left off", "what was I doing"
+- **Manual check**: `/handoff` or `handoff({ action: "status" })`
 
 ---
 

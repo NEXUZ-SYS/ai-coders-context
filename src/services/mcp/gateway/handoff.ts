@@ -6,8 +6,10 @@
  */
 
 import { HandoffService } from '../../handoff';
+import { setupHandoffTool } from '../../ai/tools';
 import type { MCPToolResponse } from './response';
 import { createJsonResponse, createErrorResponse } from './response';
+import { toolContext } from './shared';
 
 export type HandoffAction = 'install' | 'uninstall' | 'status' | 'config' | 'clean' | 'trigger' | 'setup';
 
@@ -134,11 +136,12 @@ export async function handleHandoff(
       }
 
       case 'setup': {
-        const result = await service.setup();
+        const result = await setupHandoffTool.execute!(
+          { repoPath },
+          toolContext
+        );
 
         return createJsonResponse({
-          success: true,
-          message: 'Handoff documentation setup complete',
           ...result,
           nextSteps: [
             'AGENTS.md updated with handoff snippet.',

@@ -21,7 +21,7 @@ import { SemanticContextBuilder, type ContextFormat } from '../../semantic/conte
 import { CodebaseAnalyzer } from '../../semantic/codebaseAnalyzer';
 import { QAService } from '../../qa';
 
-import { HandoffService } from '../../handoff';
+import { setupHandoffTool } from '../../ai/tools';
 
 import type { ContextParams } from './types';
 import type { MCPToolResponse } from './response';
@@ -69,8 +69,7 @@ export async function handleContext(
 
         // Inject handoff documentation (AGENTS.md snippet + skill copy)
         try {
-          const handoffService = new HandoffService(repoPath);
-          await handoffService.setup();
+          await setupHandoffTool.execute!({ repoPath }, toolContext);
         } catch {
           // Non-critical: don't break init if handoff setup fails
         }

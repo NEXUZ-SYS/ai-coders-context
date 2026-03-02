@@ -413,6 +413,18 @@ export const ScaffoldPlanOutputSchema = z.object({
   error: z.string().optional()
 });
 
+export const SetupHandoffInputSchema = z.object({
+  repoPath: z.string().describe('Repository path to set up handoff documentation'),
+});
+
+export const SetupHandoffOutputSchema = z.object({
+  success: z.boolean(),
+  agentsInjected: z.boolean().describe('Whether AGENTS.md snippet was injected'),
+  skillCopied: z.boolean().describe('Whether handoff SKILL.md was copied'),
+  message: z.string().optional(),
+  error: z.string().optional(),
+});
+
 // =============================================================================
 // Type Exports
 // =============================================================================
@@ -435,6 +447,8 @@ export type SearchCodeInput = z.infer<typeof SearchCodeInputSchema>;
 export type SearchCodeOutput = z.infer<typeof SearchCodeOutputSchema>;
 export type GetCodebaseMapInput = z.infer<typeof GetCodebaseMapInputSchema>;
 export type GetCodebaseMapOutput = z.infer<typeof GetCodebaseMapOutputSchema>;
+export type SetupHandoffInput = z.infer<typeof SetupHandoffInputSchema>;
+export type SetupHandoffOutput = z.infer<typeof SetupHandoffOutputSchema>;
 export type DocumentationOutput = z.infer<typeof DocumentationOutputSchema>;
 export type AgentPlaybook = z.infer<typeof AgentPlaybookSchema>;
 export type DevelopmentPlan = z.infer<typeof DevelopmentPlanSchema>;

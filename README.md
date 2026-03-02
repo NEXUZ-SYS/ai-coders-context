@@ -416,6 +416,7 @@ Once configured, your AI assistant will have access to 9 gateway tools with acti
 | **agent** | Agent orchestration and discovery | `discover`, `getInfo`, `orchestrate`, `getSequence`, `getDocs`, `getPhaseDocs`, `listTypes` |
 | **skill** | Skill management for on-demand expertise | `list`, `getContent`, `getForPhase`, `scaffold`, `export`, `fill` |
 | **sync** | Import/export synchronization with AI tools | `exportRules`, `exportDocs`, `exportAgents`, `exportContext`, `exportSkills`, `reverseSync`, `importDocs`, `importAgents`, `importSkills` |
+| **handoff** | Auto-handoff context preservation | `install`, `uninstall`, `status`, `config`, `clean`, `trigger`, `setup` |
 
 #### Dedicated Workflow Tools
 
@@ -425,6 +426,23 @@ Once configured, your AI assistant will have access to 9 gateway tools with acti
 | **workflow-status** | Get current workflow status, phases, and execution history |
 | **workflow-advance** | Advance to the next PREVC phase with gate checking |
 | **workflow-manage** | Manage handoffs, collaboration, documents, gates, and approvals |
+
+#### Auto-Handoff (Context Preservation)
+
+Prevents context loss from compaction by saving and restoring state automatically.
+
+```
+handoff({ action: "install" })   # Full install: hooks + docs
+handoff({ action: "setup" })     # Lightweight: docs only (AGENTS.md + skill)
+handoff({ action: "status" })    # Check context health
+```
+
+Three protection layers:
+- **Proactive (Stop hook, 80%)**: Blocks session and triggers handoff before compaction
+- **Reactive (PreCompact hook)**: Saves transcript snapshot during compaction
+- **Restoration (SessionStart hook)**: Restores saved context on session start
+
+> `context({ action: "init" })` automatically runs `setup` to inject handoff documentation.
 
 #### Key Features in v0.7.0
 
@@ -452,6 +470,7 @@ Skills are task-specific procedures that AI agents activate when needed:
 | `feature-breakdown` | Break features into tasks | P |
 | `api-design` | Design RESTful APIs | P, R |
 | `security-audit` | Security review checklist | R, V |
+| `handoff` | Save and recover context between sessions | P, E |
 
 ```bash
 npx @ai-coders/context skill init           # Initialize skills

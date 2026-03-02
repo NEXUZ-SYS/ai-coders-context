@@ -130,6 +130,11 @@ This is more efficient than fillScaffolding for large projects.`
     extendedDescription: `Generate suggested content for a single scaffold file.
 Call listFilesToFill first to get file paths, then call this for each file.
 This avoids output size limits by processing one file at a time.`
+  },
+
+  setupHandoff: {
+    name: 'setupHandoff',
+    description: 'Set up handoff documentation in a project (AGENTS.md snippet + skill copy). Lightweight — no hooks installed.',
   }
 };
 

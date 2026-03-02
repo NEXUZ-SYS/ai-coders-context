@@ -30,9 +30,11 @@ O sistema de handoff tambem esta disponivel via MCP:
 |------|-----------|
 | `handoff({ action: "status" })` | Ver status do contexto e saude da sessao |
 | `handoff({ action: "trigger", reason: "..." })` | Disparar handoff manualmente |
-| `handoff({ action: "install" })` | Instalar hooks de auto-handoff |
+| `handoff({ action: "install" })` | Instalar hooks de auto-handoff (protecao completa) |
+| `handoff({ action: "setup" })` | Setup leve — injeta AGENTS.md + copia skill (sem hooks) |
 | `handoff({ action: "config" })` | Ver/ajustar configuracao |
 | `handoff({ action: "clean" })` | Limpar estado de handoff |
+| `handoff({ action: "uninstall" })` | Remover hooks de auto-handoff |
 
 ## Gatilhos de Deteccao
 

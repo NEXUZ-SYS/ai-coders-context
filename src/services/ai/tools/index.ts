@@ -9,6 +9,7 @@ import { initializeContextTool } from './initializeContextTool';
 import { scaffoldPlanTool } from './scaffoldPlanTool';
 import { fillScaffoldingTool, listFilesToFillTool, fillSingleFileTool } from './fillScaffoldingTool';
 import { getCodebaseMapTool } from './getCodebaseMapTool';
+import { setupHandoffTool } from './setupHandoffTool';
 
 export { readFileTool } from './readFileTool';
 export { listFilesTool } from './listFilesTool';
@@ -26,6 +27,7 @@ export {
   cleanupSharedContext
 } from './fillScaffoldingTool';
 export { getCodebaseMapTool } from './getCodebaseMapTool';
+export { setupHandoffTool } from './setupHandoffTool';
 
 /**
  * Returns all code analysis tools as a ToolSet for use with AI SDK
@@ -43,7 +45,8 @@ export function getCodeAnalysisTools(): ToolSet {
     fillScaffolding: fillScaffoldingTool,
     listFilesToFill: listFilesToFillTool,
     fillSingleFile: fillSingleFileTool,
-    getCodebaseMap: getCodebaseMapTool
+    getCodebaseMap: getCodebaseMapTool,
+    setupHandoff: setupHandoffTool
   };
 }
 
@@ -62,7 +65,8 @@ export const TOOL_NAMES = [
   'fillScaffolding',
   'listFilesToFill',
   'fillSingleFile',
-  'getCodebaseMap'
+  'getCodebaseMap',
+  'setupHandoff'
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];
