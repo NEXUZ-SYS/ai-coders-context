@@ -10,6 +10,23 @@ import * as path from 'path';
 import type { InstallResult, HandoffConfig } from './types';
 import { DEFAULT_CONFIG } from './handoffService';
 
+const AGENTS_MARKER_START = '<!-- ai-context:handoff:start -->';
+const AGENTS_MARKER_END = '<!-- ai-context:handoff:end -->';
+
+const AGENTS_SNIPPET = `${AGENTS_MARKER_START}
+## Handoff de Contexto
+
+Ao iniciar sessao, verificar se existe contexto pendente:
+\`\`\`bash
+cat .context/workflow/handoff.yaml 2>/dev/null
+\`\`\`
+Se existir, informar o usuario e perguntar se deseja retomar.
+
+Comando: \`/handoff\` | MCP: \`handoff({ action: "status" })\`
+
+Detalhes: \`.context/skills/handoff/SKILL.md\`
+${AGENTS_MARKER_END}`;
+
 const HOOK_DEFINITIONS = {
   PostToolUse: [{
     hooks: [{
@@ -72,6 +89,9 @@ export function installHooks(
   // 5. Merge hooks into settings
   mergeHooksIntoSettings(settingsPath);
 
+  // 6. Inject handoff snippet into AGENTS.md
+  injectAgentsSnippet(repoPath);
+
   return { success: true, target, hooksDirPath, settingsPath, configPath };
 }
 
@@ -107,6 +127,9 @@ export function uninstallHooks(
   }
 
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+
+  // Remove handoff snippet from AGENTS.md
+  removeAgentsSnippet(repoPath);
 }
 
 /**
@@ -231,4 +254,53 @@ function generateHookScripts(_targetDir: string): void {
   // Fallback: when hook source files aren't found in the package,
   // this would generate them from templates.
   // For now, the hooks are always distributed with the package.
+}
+
+function injectAgentsSnippet(repoPath: string): void {
+  const agentsPath = path.join(repoPath, 'AGENTS.md');
+
+  if (fs.existsSync(agentsPath)) {
+    const content = fs.readFileSync(agentsPath, 'utf-8');
+
+    // Already injected — update in place
+    if (content.includes(AGENTS_MARKER_START)) {
+      const updated = content.replace(
+        new RegExp(`${escapeRegex(AGENTS_MARKER_START)}[\\s\\S]*?${escapeRegex(AGENTS_MARKER_END)}`),
+        AGENTS_SNIPPET
+      );
+      fs.writeFileSync(agentsPath, updated);
+      return;
+    }
+
+    // Append to existing file
+    fs.writeFileSync(agentsPath, content.trimEnd() + '\n\n' + AGENTS_SNIPPET + '\n');
+  } else {
+    // Create minimal AGENTS.md with snippet
+    fs.writeFileSync(agentsPath, AGENTS_SNIPPET + '\n');
+  }
+}
+
+function removeAgentsSnippet(repoPath: string): void {
+  const agentsPath = path.join(repoPath, 'AGENTS.md');
+  if (!fs.existsSync(agentsPath)) return;
+
+  const content = fs.readFileSync(agentsPath, 'utf-8');
+  if (!content.includes(AGENTS_MARKER_START)) return;
+
+  const cleaned = content
+    .replace(
+      new RegExp(`\\n*${escapeRegex(AGENTS_MARKER_START)}[\\s\\S]*?${escapeRegex(AGENTS_MARKER_END)}\\n*`),
+      '\n'
+    )
+    .trim();
+
+  if (cleaned.length === 0) {
+    fs.unlinkSync(agentsPath);
+  } else {
+    fs.writeFileSync(agentsPath, cleaned + '\n');
+  }
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
