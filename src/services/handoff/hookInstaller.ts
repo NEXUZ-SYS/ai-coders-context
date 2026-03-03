@@ -43,7 +43,7 @@ const HOOK_DEFINITIONS = {
     }],
   }],
   SessionStart: [{
-    matcher: 'startup|compact|resume',
+    matcher: 'startup|compact|resume|clear',
     hooks: [{
       type: 'command',
       command: 'node .claude/extensions/auto-handoff/src/session-start.mjs',

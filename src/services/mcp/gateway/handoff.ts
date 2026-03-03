@@ -59,9 +59,9 @@ export async function handleHandoff(
           message,
           nextSteps: [
             'Hooks are now active. Context will be preserved automatically by token counting.',
-            'Protection: Stop(80%) + PreCompact(95%) + SessionStart(restore)',
+            'Continuidade: Checkpoint(80%) → PreCompact(95%) → SessionStart(restore automático)',
+            'O handoff é restaurado automaticamente via compact, /clear, ou nova sessão.',
             'Para ver a saude do contexto, pergunte: "qual o status do handoff?"',
-            'Para ajustar thresholds, diga: "ver config do handoff"',
           ],
         });
       }

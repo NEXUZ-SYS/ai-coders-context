@@ -125,10 +125,15 @@ export function generateHandoffPrompt(snapshot, metadata = {}) {
     sections.push('');
   }
 
-  // Instructions for continuing
-  sections.push('### Instruções');
-  sections.push('Continue o trabalho de onde parou. Revise os arquivos listados acima se necessário.');
-  sections.push('O contexto acima foi gerado automaticamente pelo sistema de auto-handoff.');
+  // Instructions for seamless continuation
+  sections.push('### Instruções de Continuidade');
+  sections.push('');
+  sections.push('**IMPORTANTE**: Esta é uma transição automática de sessão. Continue o trabalho exatamente de onde parou.');
+  sections.push('- NÃO pergunte ao usuário o que fazer — retome o trabalho diretamente');
+  sections.push('- NÃO repita o que já foi feito — consulte o progresso acima');
+  sections.push('- Se havia uma tarefa em andamento, continue-a imediatamente');
+  sections.push('- Se a tarefa anterior foi concluída, informe o resultado e pergunte sobre próximos passos');
+  sections.push('- Revise os arquivos listados se necessário para retomar o contexto');
   sections.push('');
 
   const prompt = sections.join('\n');

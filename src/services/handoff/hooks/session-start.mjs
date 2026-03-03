@@ -1,13 +1,20 @@
 #!/usr/bin/env node
 
 /**
- * SessionStart Hook - Context Restorer
+ * SessionStart Hook - Seamless Context Restorer
  *
- * Fires when a new session starts or resumes after compaction.
- * If a handoff is pending, reads the saved snapshot and outputs
- * the handoff prompt to stdout (which Claude Code injects into context).
+ * Fires when a new session starts, after compaction, after /clear,
+ * or on session resume. If a handoff is pending, reads the saved
+ * snapshot and outputs the handoff prompt to stdout (which Claude Code
+ * injects into context).
  *
- * Matcher: startup|compact|resume
+ * This enables seamless multi-session continuity:
+ * - After compact: Context was auto-reduced, handoff restores structured details
+ * - After /clear: User manually cleared, handoff provides full recovery
+ * - On startup: New session detects pending handoff from previous session
+ * - On resume: Session resumed with handoff context
+ *
+ * Matcher: startup|compact|resume|clear
  */
 
 import { loadConfig } from './utils/config-loader.mjs';
@@ -22,6 +29,33 @@ import {
 } from './lib/state-manager.mjs';
 
 const COMPONENT = 'session-start';
+
+/**
+ * Build a source-aware preamble that tells Claude about the transition type.
+ */
+function buildPreamble(source, handoff) {
+  const lines = [];
+
+  if (source === 'compact') {
+    lines.push('> **Transição automática**: O contexto foi compactado pelo Claude Code.');
+    lines.push('> O handoff abaixo restaura os detalhes estruturados da sessão anterior.');
+    lines.push('> Continue o trabalho sem interrupção.');
+  } else if (source === 'clear') {
+    lines.push('> **Sessão limpa**: O usuário executou /clear.');
+    lines.push('> O handoff abaixo restaura o contexto da sessão anterior.');
+    lines.push('> Continue o trabalho de onde parou.');
+  } else if (source === 'startup') {
+    lines.push('> **Nova sessão**: Existe um handoff pendente da sessão anterior.');
+    lines.push('> O contexto abaixo foi preservado automaticamente.');
+  }
+
+  if (handoff.usagePercent) {
+    lines.push(`> Uso de contexto na sessão anterior: ${handoff.usagePercent}%`);
+  }
+
+  lines.push('');
+  return lines.join('\n');
+}
 
 async function main() {
   const config = loadConfig();
@@ -55,11 +89,12 @@ async function main() {
       process.exit(0);
     }
 
-    logger.info(COMPONENT, `Restoring handoff from session ${handoff.fromSessionId} (trigger: ${handoff.trigger})`);
+    logger.info(COMPONENT, `Restoring handoff from session ${handoff.fromSessionId} (source: ${source}, trigger: ${handoff.trigger})`);
 
-    // Output the handoff prompt - Claude Code injects stdout into context
+    // Build source-aware preamble + handoff prompt
     if (handoff.handoffPrompt) {
-      writeText(handoff.handoffPrompt);
+      const preamble = buildPreamble(source, handoff);
+      writeText(preamble + handoff.handoffPrompt);
     }
 
     // Archive the handoff data for history
@@ -72,6 +107,11 @@ async function main() {
 
     // Clear the pending handoff
     clearHandoffPending();
+
+    // Notify user via stderr (visible in terminal)
+    process.stderr.write(
+      `[auto-handoff] Contexto restaurado (source: ${source}, sessão anterior: ${handoff.fromSessionId || 'unknown'})\n`
+    );
 
     logger.info(COMPONENT, 'Context restored successfully');
   } catch (err) {

@@ -153,14 +153,44 @@ Para fazer upgrade para `full`, diga: "instalar auto-handoff" ou "ativar proteca
 
 ## Auto-Handoff (Protecao Automatica — nivel `full`)
 
-O sistema de auto-handoff oferece 3 camadas de protecao contra perda de contexto:
+O sistema de auto-handoff oferece continuidade transparente entre sessoes, sem interrupcao manual:
+
+### Fluxo Automatico (zero interrupcao)
+
+```
+Context enche → Stop hook salva checkpoint (silencioso)
+→ Trabalho continua normalmente
+→ Claude Code compacta automaticamente
+→ PreCompact salva snapshot completo
+→ SessionStart restaura handoff
+→ Claude continua sem interrupcao
+```
+
+### Fluxo Manual (/clear)
+
+```
+Contexto alto → User digita /clear
+→ SessionStart detecta handoff pendente
+→ Restaura contexto automaticamente
+→ Claude continua de onde parou
+```
+
+### Camadas de Protecao
 
 | Camada | Hook | Descricao |
 |--------|------|-----------|
-| **Proativa** | Stop (80%) | Bloqueia sessao e dispara handoff antes da compactacao |
-| **Reativa** | PreCompact (95%) | Salva snapshot do transcript antes da compactacao |
-| **Restauracao** | SessionStart | Injeta contexto salvo ao iniciar/retomar sessao |
+| **Checkpoint** | Stop (80%) | Salva checkpoint silencioso (nao bloqueia) |
+| **Snapshot** | PreCompact (95%) | Salva snapshot completo antes da compactacao |
+| **Restauracao** | SessionStart | Injeta contexto salvo (compact, /clear, startup, resume) |
 | **Monitor** | PostToolUse | Monitora tokens a cada chamada de ferramenta |
+
+### Modos de Continuidade
+
+| Modo | Gatilho | Interrupcao |
+|------|---------|-------------|
+| **Automatico** | Compact natural do Claude Code | Nenhuma — transicao transparente |
+| **Manual** | User digita `/clear` | Minima — 1 comando |
+| **Wrapper** | Script auto-handoff.sh | Nenhuma — loop autonomo |
 
 Instalar/upgrade: diga "instalar auto-handoff" ou "ativar protecao automatica"
 
