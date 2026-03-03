@@ -22,20 +22,22 @@ Integra-se com o sistema auto-handoff (`src/services/handoff/`) para preservacao
 | `/handoff clear` | Limpar handoff (trabalho concluido) |
 | `/handoff status` | Status resumido |
 
-## MCP Tool (Programatico)
+## Linguagem Natural → MCP Tool
 
-O sistema de handoff tambem esta disponivel via MCP:
+O usuario pode pedir em linguagem natural. O agente DEVE traduzir para a chamada MCP correspondente.
 
-| Acao | Descricao |
-|------|-----------|
-| `handoff({ action: "diagnose" })` | Diagnosticar nivel de protecao (none/skill-only/partial/full) |
-| `handoff({ action: "status" })` | Ver status do contexto e saude da sessao |
-| `handoff({ action: "install" })` | Instalar/upgrade para auto-handoff completo (funciona mesmo com handoff parcial) |
-| `handoff({ action: "trigger", reason: "..." })` | Disparar handoff manualmente |
-| `handoff({ action: "setup" })` | Setup leve — injeta AGENTS.md + copia skill (sem hooks) |
-| `handoff({ action: "config" })` | Ver/ajustar configuracao |
-| `handoff({ action: "clean" })` | Limpar estado de handoff |
-| `handoff({ action: "uninstall" })` | Remover hooks de auto-handoff |
+| O usuario diz (exemplos) | MCP tool call |
+|--------------------------|---------------|
+| "qual o status do handoff?", "quanto contexto eu tenho?", "quanto falta pra compactar?" | `handoff({ action: "status" })` |
+| "o auto-handoff ta funcionando?", "qual o nivel de protecao?", "diagnosticar handoff" | `handoff({ action: "diagnose" })` |
+| "instalar auto-handoff", "ativar protecao automatica", "quero handoff completo" | `handoff({ action: "install" })` |
+| "salvar contexto agora", "fazer handoff manual", "preciso pausar, salva tudo" | `handoff({ action: "trigger", reason: "..." })` |
+| "configurar handoff basico", "setup leve do handoff" | `handoff({ action: "setup" })` |
+| "ver config do handoff", "ajustar thresholds", "mudar limite de contexto" | `handoff({ action: "config" })` |
+| "limpar estado do handoff", "resetar handoff", "handoff clear" | `handoff({ action: "clean" })` |
+| "remover auto-handoff", "desinstalar hooks do handoff" | `handoff({ action: "uninstall" })` |
+
+**IMPORTANTE:** SEMPRE chamar o MCP tool real. NAO simular a resposta lendo handoff.yaml manualmente.
 
 ## Gatilhos de Deteccao
 
@@ -146,8 +148,8 @@ Ao iniciar uma nova sessao:
 | `partial` | Incompleto | Alguns hooks presentes, instalacao incompleta |
 | `full` | Automatico completo | Hooks + contagem de tokens + 3 camadas de protecao |
 
-Use `handoff({ action: "diagnose" })` para verificar o nivel atual.
-Use `handoff({ action: "install" })` para fazer upgrade de qualquer nivel para `full`.
+Para verificar o nivel atual, pergunte: "qual o nivel de protecao do handoff?"
+Para fazer upgrade para `full`, diga: "instalar auto-handoff" ou "ativar protecao automatica"
 
 ## Auto-Handoff (Protecao Automatica — nivel `full`)
 
@@ -160,7 +162,7 @@ O sistema de auto-handoff oferece 3 camadas de protecao contra perda de contexto
 | **Restauracao** | SessionStart | Injeta contexto salvo ao iniciar/retomar sessao |
 | **Monitor** | PostToolUse | Monitora tokens a cada chamada de ferramenta |
 
-Instalar/upgrade com: `handoff({ action: "install" })`
+Instalar/upgrade: diga "instalar auto-handoff" ou "ativar protecao automatica"
 
 ## Integracao com Workflow PREVC
 

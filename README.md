@@ -432,9 +432,9 @@ Once configured, your AI assistant will have access to 9 gateway tools with acti
 Prevents context loss from compaction by saving and restoring state automatically.
 
 ```
-handoff({ action: "install" })   # Full install: hooks + docs
-handoff({ action: "setup" })     # Lightweight: docs only (AGENTS.md + skill)
-handoff({ action: "status" })    # Check context health
+"install auto-handoff"          # Full install: hooks + docs
+"set up handoff docs"           # Lightweight: docs only (AGENTS.md + skill)
+"what's my handoff status?"     # Check context health
 ```
 
 Three protection layers:

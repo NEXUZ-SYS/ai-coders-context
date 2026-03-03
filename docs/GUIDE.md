@@ -652,15 +652,17 @@ For developing/testing locally:
 
 #### Handoff Tools
 
-| Tool | Description |
-|------|-------------|
-| `handoff({ action: "install" })` | Install auto-handoff hooks (full protection) |
-| `handoff({ action: "setup" })` | Lightweight setup — AGENTS.md snippet + skill copy |
-| `handoff({ action: "status" })` | Check context health and session state |
-| `handoff({ action: "config" })` | Read/update thresholds and settings |
-| `handoff({ action: "trigger" })` | Manually trigger a handoff save |
-| `handoff({ action: "clean" })` | Clean up old session state |
-| `handoff({ action: "uninstall" })` | Remove auto-handoff hooks |
+You can ask in natural language or use the MCP tool directly:
+
+| You say | What happens |
+|---------|-------------|
+| "install auto-handoff" | Installs hooks for full context protection |
+| "set up handoff docs" | Lightweight setup — AGENTS.md snippet + skill copy |
+| "what's my handoff status?" | Check context health and session state |
+| "show handoff config" | Read/update thresholds and settings |
+| "save context now" | Manually trigger a handoff save |
+| "clean handoff state" | Clean up old session state |
+| "remove auto-handoff" | Remove auto-handoff hooks |
 
 #### Orchestration Tools
 
@@ -682,7 +684,7 @@ Auto-handoff prevents context loss when Claude Code compacts your conversation. 
 
 **Full install (hooks + documentation):**
 ```
-handoff({ action: "install" })
+"install auto-handoff" or "activate automatic protection"
 ```
 
 This installs 4 hooks in `.claude/settings.json`:
@@ -696,7 +698,7 @@ This installs 4 hooks in `.claude/settings.json`:
 
 **Lightweight setup (documentation only):**
 ```
-handoff({ action: "setup" })
+"set up handoff docs" or "lightweight handoff setup"
 ```
 
 Injects AGENTS.md snippet and copies the handoff skill to `.context/skills/handoff/`. This runs automatically during `context({ action: "init" })`.
@@ -704,7 +706,7 @@ Injects AGENTS.md snippet and copies the handoff skill to `.context/skills/hando
 ### Configuration
 
 ```
-handoff({ action: "config", contextLimit: 200000, proactiveThreshold: 80 })
+"show handoff config" or "change context limit to 200000, proactive threshold to 80"
 ```
 
 | Parameter | Default | Description |
@@ -719,7 +721,7 @@ handoff({ action: "config", contextLimit: 200000, proactiveThreshold: 80 })
 Once installed, handoff works automatically. The skill also detects intent:
 - **Pause intent**: "stop for today", "save progress", "continue tomorrow"
 - **Resume intent**: "continue where I left off", "what was I doing"
-- **Manual check**: `/handoff` or `handoff({ action: "status" })`
+- **Manual check**: `/handoff` or ask "what's my handoff status?"
 
 ---
 

@@ -60,8 +60,8 @@ export async function handleHandoff(
           nextSteps: [
             'Hooks are now active. Context will be preserved automatically by token counting.',
             'Protection: Stop(80%) + PreCompact(95%) + SessionStart(restore)',
-            'Use handoff({ action: "status" }) to check context health.',
-            'Use handoff({ action: "config" }) to adjust thresholds.',
+            'Para ver a saude do contexto, pergunte: "qual o status do handoff?"',
+            'Para ajustar thresholds, diga: "ver config do handoff"',
           ],
         });
       }
@@ -123,8 +123,8 @@ export async function handleHandoff(
           sessionsArchived: status.sessionsArchived,
           ...(diagnosis.level !== 'full' && {
             suggestion: diagnosis.level === 'none'
-              ? 'Use handoff({ action: "install" }) to enable auto-handoff.'
-              : `Current level: '${diagnosis.level}'. Use handoff({ action: "install" }) to upgrade to full auto-handoff with token counting.`,
+              ? 'Para ativar o auto-handoff, diga: "instalar auto-handoff"'
+              : `Nivel atual: '${diagnosis.level}'. Para upgrade completo com contagem de tokens, diga: "instalar auto-handoff"`,
             missing: diagnosis.missing,
           }),
         });
@@ -187,7 +187,7 @@ export async function handleHandoff(
           nextSteps: [
             'AGENTS.md updated with handoff snippet.',
             'Handoff skill copied to .context/skills/handoff/.',
-            'For full auto-handoff protection (token counting + hooks), use handoff({ action: "install" }).',
+            'Para protecao completa (contagem de tokens + hooks), diga: "instalar auto-handoff"',
           ],
         });
       }
@@ -218,7 +218,7 @@ export async function handleHandoff(
           },
           missing: diagnosis.missing,
           ...(diagnosis.level !== 'full' && {
-            recommendation: 'Use handoff({ action: "install" }) to upgrade to full auto-handoff protection.',
+            recommendation: 'Para upgrade completo, diga: "instalar auto-handoff"',
           }),
         });
       }

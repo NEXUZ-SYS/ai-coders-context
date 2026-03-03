@@ -22,7 +22,7 @@ cat .context/workflow/handoff.yaml 2>/dev/null
 \`\`\`
 Se existir, informar o usuario e perguntar se deseja retomar.
 
-Comando: \`/handoff\` | MCP: \`handoff({ action: "status" })\`
+Pergunte: "qual o status do handoff?" ou use \`/handoff\`
 
 Detalhes: \`.context/skills/handoff/SKILL.md\`
 ${AGENTS_MARKER_END}`;
